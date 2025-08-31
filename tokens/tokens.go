@@ -70,6 +70,7 @@ const (
 
 	// Keywords - Control Flow
 	IF       = "IF"
+	ELIF     = "ELIF"
 	ELSE     = "ELSE"
 	WHILE    = "WHILE"
 	FOR      = "FOR"
@@ -89,13 +90,6 @@ const (
 	BOOL_TYPE   = "BOOL_TYPE"
 	ARRAY_TYPE  = "ARRAY_TYPE"
 	OBJECT_TYPE = "OBJECT_TYPE"
-
-	// Keywords - Object Oriented
-	CLASS   = "CLASS"
-	THIS    = "THIS"
-	NEW     = "NEW"
-	EXTENDS = "EXTENDS"
-	SUPER   = "SUPER"
 
 	// Keywords - Exception Handling
 	TRY     = "TRY"
@@ -156,13 +150,6 @@ var keywords = map[string]TokenType{
 	"bool":   BOOL_TYPE,
 	"array":  ARRAY_TYPE,
 	"object": OBJECT_TYPE,
-
-	// Object Oriented
-	"class":   CLASS,
-	"this":    THIS,
-	"new":     NEW,
-	"extends": EXTENDS,
-	"super":   SUPER,
 
 	// Exception Handling
 	"try":     TRY,
