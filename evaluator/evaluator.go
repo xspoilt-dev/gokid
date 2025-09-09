@@ -120,6 +120,37 @@ func Eval(node parser.Node, env *Environment) Object {
 	case *parser.ObjectLiteral:
 		return evalObjectLiteral(node, env)
 
+	case *parser.CallExpression:
+		function := Eval(node.Function, env)
+		if isError(function) {
+			return function
+		}
+		args := evalExpressions(node.Arguments, env)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+		return applyFunction(function, args)
+
+	case *parser.FunctionLiteral:
+		params := node.Parameters
+		body := node.Body
+		return &Function{Parameters: params, Env: env, Body: body}
+
+	case *parser.WhileStatement:
+		return evalWhileStatement(node, env)
+
+	case *parser.ForStatement:
+		return evalForStatement(node, env)
+
+	case *parser.BreakStatement:
+		return &Break{}
+
+	case *parser.ContinueStatement:
+		return &Continue{}
+
+	case *parser.AssignmentExpression:
+		return evalAssignmentExpression(node, env)
+
 	default:
 		return newError("unknown node type: %T", node)
 	}
@@ -151,7 +182,7 @@ func evalBlockStatement(block *parser.BlockStatement, env *Environment) Object {
 
 		if result != nil {
 			rt := result.Type()
-			if rt == RETURN_OBJ || rt == ERROR_OBJ {
+			if rt == RETURN_OBJ || rt == ERROR_OBJ || rt == BREAK_OBJ || rt == CONTINUE_OBJ {
 				return result
 			}
 		}
@@ -210,10 +241,16 @@ func evalInfixExpression(operator string, left, right Object) Object {
 		return evalFloatInfixExpression(operator, left, right)
 	case left.Type() == STRING_OBJ && right.Type() == STRING_OBJ:
 		return evalStringInfixExpression(operator, left, right)
+	case left.Type() == BOOLEAN_OBJ && right.Type() == BOOLEAN_OBJ:
+		return evalBooleanInfixExpression(operator, left, right)
 	case operator == "==":
 		return nativeBoolToPyMonkeyBool(left == right)
 	case operator == "!=":
 		return nativeBoolToPyMonkeyBool(left != right)
+	case operator == "&&":
+		return evalLogicalAndExpression(left, right)
+	case operator == "||":
+		return evalLogicalOrExpression(left, right)
 	case left.Type() != right.Type():
 		return newError("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	default:
@@ -306,6 +343,38 @@ func evalStringInfixExpression(operator string, left, right Object) Object {
 	}
 }
 
+func evalBooleanInfixExpression(operator string, left, right Object) Object {
+	leftVal := left.(*Boolean).Value
+	rightVal := right.(*Boolean).Value
+
+	switch operator {
+	case "==":
+		return nativeBoolToPyMonkeyBool(leftVal == rightVal)
+	case "!=":
+		return nativeBoolToPyMonkeyBool(leftVal != rightVal)
+	case "&&":
+		return nativeBoolToPyMonkeyBool(leftVal && rightVal)
+	case "||":
+		return nativeBoolToPyMonkeyBool(leftVal || rightVal)
+	default:
+		return newError("unknown operator: %s", operator)
+	}
+}
+
+func evalLogicalAndExpression(left, right Object) Object {
+	if !isTruthy(left) {
+		return FALSE
+	}
+	return nativeBoolToPyMonkeyBool(isTruthy(right))
+}
+
+func evalLogicalOrExpression(left, right Object) Object {
+	if isTruthy(left) {
+		return TRUE
+	}
+	return nativeBoolToPyMonkeyBool(isTruthy(right))
+}
+
 func evalIfExpression(ie *parser.IfExpression, env *Environment) Object {
 	condition := Eval(ie.Condition, env)
 	if isError(condition) {
@@ -341,7 +410,7 @@ func evalIdentifier(node *parser.Identifier, env *Environment) Object {
 
 	val, ok := env.Get(node.Value)
 	if !ok {
-		return newError("identifier not found: " + node.Value)
+		return newError("identifier not found: %s", node.Value)
 	}
 	return val
 }
@@ -429,9 +498,184 @@ func newError(format string, a ...interface{}) *Error {
 	return &Error{Message: fmt.Sprintf(format, a...)}
 }
 
+// Assignment expression evaluation
+func evalAssignmentExpression(ae *parser.AssignmentExpression, env *Environment) Object {
+	val := Eval(ae.Value, env)
+	if isError(val) {
+		return val
+	}
+
+	// Handle different assignment operators
+	switch ae.Operator {
+	case "=":
+		env.Set(ae.Name.Value, val)
+		return val
+	case "+=":
+		current, exists := env.Get(ae.Name.Value)
+		if !exists {
+			return newError("identifier not found: %s", ae.Name.Value)
+		}
+		result := evalInfixExpression("+", current, val)
+		if isError(result) {
+			return result
+		}
+		env.Set(ae.Name.Value, result)
+		return result
+	case "-=":
+		current, exists := env.Get(ae.Name.Value)
+		if !exists {
+			return newError("identifier not found: %s", ae.Name.Value)
+		}
+		result := evalInfixExpression("-", current, val)
+		if isError(result) {
+			return result
+		}
+		env.Set(ae.Name.Value, result)
+		return result
+	case "*=":
+		current, exists := env.Get(ae.Name.Value)
+		if !exists {
+			return newError("identifier not found: %s", ae.Name.Value)
+		}
+		result := evalInfixExpression("*", current, val)
+		if isError(result) {
+			return result
+		}
+		env.Set(ae.Name.Value, result)
+		return result
+	case "/=":
+		current, exists := env.Get(ae.Name.Value)
+		if !exists {
+			return newError("identifier not found: %s", ae.Name.Value)
+		}
+		result := evalInfixExpression("/", current, val)
+		if isError(result) {
+			return result
+		}
+		env.Set(ae.Name.Value, result)
+		return result
+	default:
+		return newError("unknown assignment operator: %s", ae.Operator)
+	}
+}
+
 func isError(obj Object) bool {
 	if obj != nil {
 		return obj.Type() == ERROR_OBJ
 	}
 	return false
+}
+
+// Function application
+func applyFunction(fn Object, args []Object) Object {
+	switch fn := fn.(type) {
+	case *Function:
+		extendedEnv := extendFunctionEnv(fn, args)
+		evaluated := Eval(fn.Body, extendedEnv)
+		return unwrapReturnValue(evaluated)
+	case *Builtin:
+		return fn.Fn(args...)
+	default:
+		return newError("not a function: %T", fn)
+	}
+}
+
+func extendFunctionEnv(fn *Function, args []Object) *Environment {
+	env := NewEnclosedEnvironment(fn.Env)
+
+	for paramIdx, param := range fn.Parameters {
+		env.Set(param.Value, args[paramIdx])
+	}
+
+	return env
+}
+
+func unwrapReturnValue(obj Object) Object {
+	if returnValue, ok := obj.(*ReturnValue); ok {
+		return returnValue.Value
+	}
+	return obj
+}
+
+// Loop evaluations
+func evalWhileStatement(ws *parser.WhileStatement, env *Environment) Object {
+	var result Object = NULL
+
+	for {
+		condition := Eval(ws.Condition, env)
+		if isError(condition) {
+			return condition
+		}
+
+		if !isTruthy(condition) {
+			break
+		}
+
+		result = Eval(ws.Body, env)
+		if result != nil {
+			switch result.Type() {
+			case RETURN_OBJ, ERROR_OBJ:
+				return result
+			case BREAK_OBJ:
+				return NULL
+			case CONTINUE_OBJ:
+				continue
+			}
+		}
+	}
+
+	return result
+}
+
+func evalForStatement(fs *parser.ForStatement, env *Environment) Object {
+	// Create new environment for for loop scope
+	forEnv := NewEnclosedEnvironment(env)
+
+	// Initialize
+	if fs.Initializer != nil {
+		result := Eval(fs.Initializer, forEnv)
+		if isError(result) {
+			return result
+		}
+	}
+
+	var result Object = NULL
+
+	for {
+		// Check condition
+		if fs.Condition != nil {
+			condition := Eval(fs.Condition, forEnv)
+			if isError(condition) {
+				return condition
+			}
+			if !isTruthy(condition) {
+				break
+			}
+		}
+
+		// Execute body
+		result = Eval(fs.Body, forEnv)
+		if result != nil {
+			switch result.Type() {
+			case RETURN_OBJ, ERROR_OBJ:
+				return result
+			case BREAK_OBJ:
+				return NULL
+			case CONTINUE_OBJ:
+				// Continue to increment
+			default:
+				// Continue normally
+			}
+		}
+
+		// Increment
+		if fs.Increment != nil {
+			incrementResult := Eval(fs.Increment, forEnv)
+			if isError(incrementResult) {
+				return incrementResult
+			}
+		}
+	}
+
+	return result
 }

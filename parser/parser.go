@@ -98,6 +98,11 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(tokens.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(tokens.LBRACE, p.parseObjectLiteral)
 
+	// Register built-in functions as identifiers (they'll be handled by parseIdentifier)
+	p.registerPrefix(tokens.PRINT, p.parseIdentifier)
+	p.registerPrefix(tokens.LEN, p.parseIdentifier)
+	p.registerPrefix(tokens.TYPE, p.parseIdentifier)
+
 	// Register infix parse functions
 	p.registerInfix(tokens.PLUS, p.parseInfixExpression)
 	p.registerInfix(tokens.MINUS, p.parseInfixExpression)
@@ -217,6 +222,8 @@ func (p *Parser) parseStatement() Statement {
 		return p.parseVarStatement()
 	case tokens.RETURN:
 		return p.parseReturnStatement()
+	case tokens.FUNCTION:
+		return p.parseFunctionStatement()
 	case tokens.WHILE:
 		return p.parseWhileStatement()
 	case tokens.FOR:
@@ -433,6 +440,20 @@ func (p *Parser) parseBreakStatement() *BreakStatement {
 
 func (p *Parser) parseContinueStatement() *ContinueStatement {
 	stmt := &ContinueStatement{Token: p.curToken}
+
+	if p.peekTokenIs(tokens.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+// Function statement (function declarations)
+func (p *Parser) parseFunctionStatement() *ExpressionStatement {
+	// Function declarations are actually function literals assigned to the global scope
+	// We'll parse them as expression statements for now
+	stmt := &ExpressionStatement{Token: p.curToken}
+	stmt.Expression = p.parseFunctionLiteral()
 
 	if p.peekTokenIs(tokens.SEMICOLON) {
 		p.nextToken()

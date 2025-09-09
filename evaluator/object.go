@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"fmt"
+	"gokid/parser"
 	"hash/fnv"
 	"strings"
 )
@@ -21,6 +22,8 @@ const (
 	BUILTIN_OBJ  = "BUILTIN"
 	ARRAY_OBJ    = "ARRAY"
 	HASH_OBJ     = "HASH"
+	BREAK_OBJ    = "BREAK"
+	CONTINUE_OBJ = "CONTINUE"
 )
 
 // Object interface - all values in our language implement this
@@ -154,3 +157,38 @@ func (s *String) HashKey() HashKey {
 	h.Write([]byte(s.Value))
 	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
+
+// Function object
+type Function struct {
+	Parameters []*parser.Identifier
+	Body       *parser.BlockStatement
+	Env        *Environment
+}
+
+func (f *Function) Type() ObjectType { return FUNCTION_OBJ }
+func (f *Function) Inspect() string {
+	var out strings.Builder
+	parameters := []string{}
+	for _, p := range f.Parameters {
+		parameters = append(parameters, p.Value)
+	}
+	out.WriteString("fn")
+	out.WriteString("(")
+	out.WriteString(strings.Join(parameters, ", "))
+	out.WriteString(") {\n")
+	out.WriteString("[function body]")
+	out.WriteString("\n}")
+	return out.String()
+}
+
+// Break object for break statements
+type Break struct{}
+
+func (b *Break) Type() ObjectType { return BREAK_OBJ }
+func (b *Break) Inspect() string  { return "break" }
+
+// Continue object for continue statements
+type Continue struct{}
+
+func (c *Continue) Type() ObjectType { return CONTINUE_OBJ }
+func (c *Continue) Inspect() string  { return "continue" }

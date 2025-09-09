@@ -1,0 +1,35 @@
+# GoKid Language Interpreter - .gitignore
+
+# Compiled binaries
+gokid
+gokid.exe
+gokid-linux
+gokid-macos
+gokid-windows
+
+# Go build artifacts
+*.o
+*.a
+*.so
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Test files (temporary)
+test*.gokid
+temp*.gokid
+
+# Logs
+*.log
+
+# Go module cache
+go.sum

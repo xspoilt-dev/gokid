@@ -1,0 +1,22 @@
+// fibonacci.gokid - Fibonacci sequence calculator
+
+let fibonacci = function(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+print("=== Fibonacci Sequence Calculator ===");
+print("Calculating first 15 Fibonacci numbers:");
+print("");
+
+let i = 0;
+while (i <= 15) {
+    let result = fibonacci(i);
+    print("F(" + i + ") = " + result);
+    i += 1;
+}
+
+print("");
+print("=== Fibonacci Demo Complete ===");

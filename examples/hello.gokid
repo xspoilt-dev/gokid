@@ -1,0 +1,77 @@
+// hello.gokid - A simple GoKid program demonstrating basic features
+
+// Variable declarations
+let greeting = "Hello, GoKid World!";
+const author = "xspoilt-dev";
+var version = "1.0.0";
+
+print("=== Welcome to GoKid Programming Language ===");
+print(greeting);
+print("Created by: " + author);
+print("Version: " + version);
+print("");
+
+// Basic arithmetic
+let a = 10;
+let b = 5;
+print("Math Operations:");
+print(a + " + " + b + " = " + (a + b));
+print(a + " - " + b + " = " + (a - b));
+print(a + " * " + b + " = " + (a * b));
+print(a + " / " + b + " = " + (a / b));
+print(a + " ** " + b + " = " + (a ** b));
+print("");
+
+// Arrays and built-in functions
+let numbers = [1, 2, 3, 4, 5];
+print("Array: " + numbers);
+print("Array length: " + len(numbers));
+print("First element: " + numbers[0]);
+print("Last element: " + numbers[len(numbers) - 1]);
+print("");
+
+// Objects
+let person = {
+    name: "Alice",
+    age: 30,
+    city: "New York"
+};
+print("Person object:");
+print("Name: " + person.name);
+print("Age: " + person.age);
+print("City: " + person.city);
+print("");
+
+// Functions
+let factorial = function(n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+};
+
+print("Factorial examples:");
+let i = 1;
+while (i <= 5) {
+    print("factorial(" + i + ") = " + factorial(i));
+    i += 1;
+}
+print("");
+
+// Control flow
+let score = 85;
+print("Grade calculation for score " + score + ":");
+if (score >= 90) {
+    print("Grade: A");
+} else if (score >= 80) {
+    print("Grade: B");
+} else if (score >= 70) {
+    print("Grade: C");
+} else if (score >= 60) {
+    print("Grade: D");
+} else {
+    print("Grade: F");
+}
+
+print("");
+print("=== GoKid Demo Complete ===");

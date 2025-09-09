@@ -92,6 +92,10 @@ func (l *Lexer) NextToken() tokens.Token {
 			l.readChar()
 			literal := string(ch) + string(l.ch)
 			tok = tokens.Token{Type: tokens.DIVIDE_ASSIGN, Literal: literal}
+		} else if l.peekChar() == '/' {
+			// Skip single-line comment
+			l.skipComment()
+			return l.NextToken()
 		} else {
 			tok = newToken(tokens.SLASH, l.ch)
 		}
@@ -199,6 +203,13 @@ func newToken(tokenType tokens.TokenType, ch byte) tokens.Token {
 
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
+func (l *Lexer) skipComment() {
+	// Skip until end of line or end of file
+	for l.ch != '\n' && l.ch != 0 {
 		l.readChar()
 	}
 }

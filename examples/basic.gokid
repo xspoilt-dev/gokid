@@ -1,0 +1,21 @@
+print("Hello from GoKid!");
+
+let x = 42;
+print(x);
+
+let arr = [1, 2, 3];
+print(arr);
+
+let name = "Alice";
+print(name);
+
+if (x > 0) {
+    print("Positive number");
+}
+
+let add = function(a, b) {
+    return a + b;
+};
+
+let result = add(5, 3);
+print(result);

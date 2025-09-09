@@ -1,0 +1,78 @@
+// array_operations.gokid - Demonstrates array processing
+
+// Array utility functions
+let findMax = function(arr) {
+    if (len(arr) == 0) {
+        return null;
+    }
+    
+    let max = arr[0];
+    let i = 1;
+    while (i < len(arr)) {
+        if (arr[i] > max) {
+            max = arr[i];
+        }
+        i += 1;
+    }
+    return max;
+};
+
+let findMin = function(arr) {
+    if (len(arr) == 0) {
+        return null;
+    }
+    
+    let min = arr[0];
+    let i = 1;
+    while (i < len(arr)) {
+        if (arr[i] < min) {
+            min = arr[i];
+        }
+        i += 1;
+    }
+    return min;
+};
+
+let sum = function(arr) {
+    let total = 0;
+    let i = 0;
+    while (i < len(arr)) {
+        total += arr[i];
+        i += 1;
+    }
+    return total;
+};
+
+let average = function(arr) {
+    if (len(arr) == 0) {
+        return 0;
+    }
+    return sum(arr) / len(arr);
+};
+
+// Test the functions
+print("=== Array Operations Demo ===");
+
+let numbers = [15, 3, 9, 1, 22, 7, 18, 5];
+print("Array: " + numbers);
+print("Length: " + len(numbers));
+print("Maximum: " + findMax(numbers));
+print("Minimum: " + findMin(numbers));
+print("Sum: " + sum(numbers));
+print("Average: " + average(numbers));
+
+print("");
+
+// Mixed data types
+let mixed = [1, "hello", 3, "world", 5];
+print("Mixed array: " + mixed);
+print("Length: " + len(mixed));
+
+// Array modification
+let fruits = ["apple", "banana", "orange"];
+print("Original fruits: " + fruits);
+fruits[1] = "grape";
+print("After modification: " + fruits);
+
+print("");
+print("=== Array Operations Demo Complete ===");
