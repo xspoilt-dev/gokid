@@ -1,0 +1,23 @@
+// Test working features of GoKid
+let x = 42;
+let name = "GoKid";
+let numbers = [1, 2, 3, 4, 5];
+
+// Math works
+let sum = 10 + 15;
+let product = x * 2;
+
+// Arrays work  
+let first = numbers[0];
+let second = numbers[1];
+
+// Strings work
+let greeting = "Hello " + name;
+
+// Conditionals work
+if (x > 40) {
+    let result = "x is greater than 40";
+}
+
+// Check what we can do
+len(numbers);
